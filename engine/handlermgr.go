@@ -3,10 +3,10 @@ package engine
 import (
 	"context"
 	"fmt"
+	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
 	"github.com/cat3306/gameserver/router"
-	"hash/crc32"
-	"log"
+	"github.com/cat3306/gameserver/util"
 	"reflect"
 )
 
@@ -47,18 +47,15 @@ func (h *HandlerManager) RegisterRouter(iG router.IGameObject) {
 		v, ok := vl.Method(i).Interface().(func(ctx *protocol.Context))
 		if ok {
 			if checkoutMethod(name) {
-				hashId := methodHash(name)
+				hashId := util.MethodHash(name)
 				h.Register(hashId, v)
-				log.Printf("[%s.%s] hashId:%d", tName, name, hashId)
+				glog.Logger.Sugar().Infof("[%s.%s] hashId:%d", tName, name, hashId)
 			}
 		}
 	}
 }
 func (h *HandlerManager) Cancel() {
 	h.cancel()
-}
-func methodHash(method string) uint32 {
-	return crc32.ChecksumIEEE([]byte(method))
 }
 
 //函数签名首字母大写才会被注入

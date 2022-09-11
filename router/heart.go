@@ -1,7 +1,7 @@
 package router
 
 import (
-	"fmt"
+	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
 )
 
@@ -13,9 +13,10 @@ func (h *HeartBeat) Init() IGameObject {
 	return h
 }
 func (h *HeartBeat) HeartBeat(ctx *protocol.Context) {
-	fmt.Println(string(ctx.Payload))
-	err := ctx.Conn.AsyncWrite(protocol.Encode("haha", protocol.String, ctx.Proto), nil)
+	str := ""
+	err := ctx.Bind(&str)
 	if err != nil {
-		fmt.Println(err.Error())
+		glog.Logger.Sugar().Errorf("Bind err:%s", err)
 	}
+	ctx.Send("*")
 }

@@ -4,19 +4,20 @@ import (
 	"encoding/binary"
 	"errors"
 	"github.com/panjf2000/gnet/v2"
+	"io"
 )
 
 //
-// * 0           2                       6
-// * +-----------+-----------------------+
-// * |   magic   |       body len        |
-// * +-----------+-----------+-----------+
-// * |                                   |
-// * +                                   +
-// * |           body bytes              |
-// * +                                   +
-// * |            ... ...                |
-// * +-----------------------------------+
+// * 0                       4                       8           10
+// * +-----------------------+-----------------------+-----------+
+// * |   body len    		 |       protocol len    | code type |
+// * +-----------------------+-----------------------+-----------+
+// * |                                   			 			 |
+// * +                                       		             +
+// * |                   body bytes              		       	 |
+// * +                                   						 +
+// * |                                  						 |
+// * +-----------------------------------------------------------+
 
 const (
 	payloadLen  = uint32(4)
@@ -29,14 +30,9 @@ var (
 	ErrIncompletePacket = errors.New("incomplete packet")
 )
 
-type Context struct {
-	Payload  []byte
-	CodeType CodeType
-	Proto    uint32
-	Conn     gnet.Conn
-}
 
 func Decode(c gnet.Conn) (*Context, error) {
+
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
 	buf, err := c.Peek(bodyOffset)
 	if err != nil {
@@ -81,4 +77,21 @@ func Encode(v interface{}, codeType CodeType, proto uint32) []byte {
 	packetEndian.PutUint16(data[payloadLen+protocolLen:], uint16(codeType))
 	copy(data[bodyOffset:msgLen], raw)
 	return data
+}
+
+func ReadFull(r io.Reader) ([]byte, uint32, uint16, error) {
+	preBuff := make([]byte, 10, 10)
+	_, err := io.ReadFull(r, preBuff)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	bodyLen := packetEndian.Uint32(preBuff[:payloadLen])
+	protocol := packetEndian.Uint32(preBuff[payloadLen : payloadLen+protocolLen])
+	codeType := packetEndian.Uint16(preBuff[payloadLen+protocolLen : payloadLen+protocolLen+codeTypeLen])
+	payload := make([]byte, bodyLen, bodyLen)
+	_, err = io.ReadFull(r, payload)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	return payload, protocol, codeType, nil
 }
