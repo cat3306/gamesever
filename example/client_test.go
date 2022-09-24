@@ -13,11 +13,13 @@ import (
 
 func Conn() net.Conn {
 	//conf.DefaultConf()
-	conn, err := net.Dial("tcp", "127.0.0.1:8849")
+	conn, err := net.Dial("tcp", "127.0.0.1:8840")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
+	tc := conn.(*net.TCPConn)
+	tc.SetReadBuffer(1)
 	return conn
 }
 func init() {
@@ -37,27 +39,36 @@ func receive(conn net.Conn) {
 func TestHeartBeat(t *testing.T) {
 	conn := Conn()
 	receive(conn)
-	heartBeat(conn)
+	heartBeat(conn, false)
+}
+func TestGoHeartBeat(t *testing.T) {
+	conn := Conn()
+	receive(conn)
+	heartBeat(conn, true)
 }
 func TestHearBeatMore(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		go func() {
 			conn := Conn()
 			receive(conn)
-			heartBeat(conn)
+			heartBeat(conn, false)
 		}()
 	}
 	select {}
 }
-func heartBeat(conn net.Conn) {
-	raw := protocol.Encode("💓", protocol.String, util.MethodHash("HeartBeat"))
+func heartBeat(conn net.Conn, isGo bool) {
+	m := "HeartBeat"
+	if isGo {
+		m = "GoHeartBeat"
+	}
+	raw, msgLen := protocol.Encode("💓", protocol.String, util.MethodHash(m))
 	for {
-		_, err := conn.Write(raw)
+		_, err := conn.Write(raw[:msgLen])
 		if err != nil {
 			fmt.Println("write error err ", err)
 			return
 		}
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
 
@@ -68,6 +79,7 @@ func TestCreateRoom(t *testing.T) {
 }
 
 func createRoom(conn net.Conn) {
+
 	type CreateRoomReq struct {
 		Pwd       string `json:"Pwd"`
 		MaxNum    int    `json:"MaxNum"`    //最大人数
@@ -78,8 +90,8 @@ func createRoom(conn net.Conn) {
 		MaxNum:    10,
 		JoinState: true,
 	}
-	raw := protocol.Encode(req, protocol.Json, util.MethodHash("CreateRoom"))
-	_, err := conn.Write(raw)
+	raw, msgLen := protocol.Encode(req, protocol.Json, util.MethodHash("CreateRoom"))
+	_, err := conn.Write(raw[:msgLen])
 	if err != nil {
 		fmt.Println("write error err ", err)
 		return
@@ -101,8 +113,8 @@ func joinRoom(conn net.Conn) {
 		Pwd:    "123456",
 		RoomId: "kInXQNE",
 	}
-	raw := protocol.Encode(req, protocol.Json, util.MethodHash("JoinRoom"))
-	_, err := conn.Write(raw)
+	raw, msgLen := protocol.Encode(req, protocol.Json, util.MethodHash("JoinRoom"))
+	_, err := conn.Write(raw[:msgLen])
 	if err != nil {
 		fmt.Println("write error err ", err)
 		return

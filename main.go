@@ -17,6 +17,7 @@ func main() {
 	e.AddRouter(
 		new(router.HeartBeat),
 		new(router.RoomManager),
+		new(router.GameManager),
 	)
 	e.Run()
 }

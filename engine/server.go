@@ -14,24 +14,21 @@ import (
 
 type Server struct {
 	gPool   *goroutine.Pool
-	connMgr *ConnManager
+	connMgr *protocol.ConnManager
 	gnet.BuiltinEventEngine
 	eng        gnet.Engine
 	handlerMgr *HandlerManager
-	rawChan    chan []byte
 }
 
 func NewEngine() *Server {
 
 	return &Server{
-		connMgr:    newConnManager(),
+		connMgr:    protocol.NewConnManager(),
 		gPool:      goroutine.Default(),
 		handlerMgr: NewHandlerManager(),
-		rawChan:    make(chan []byte, 1000),
 	}
 }
 func (s *Server) OnBoot(e gnet.Engine) (action gnet.Action) {
-
 	s.eng = e
 	glog.Logger.Sugar().Infof("game Server is listening on:%d", conf.GameConfig.Port)
 	return
@@ -42,20 +39,30 @@ func (s *Server) OnTraffic(c gnet.Conn) gnet.Action {
 		glog.Logger.Sugar().Errorf("OnTraffic err:%s", err.Error())
 		return gnet.None
 	}
-	context.SetRawChan(s.rawChan)
-	f := s.handlerMgr.GetHandler(context.Proto)
+	if context == nil {
+		panic("context nil")
+	}
+	context.SetConnMgr(s.connMgr)
+	s.exeHandler(context)
+	return gnet.None
+}
+func (s *Server) exeHandler(ctx *protocol.Context) {
+	f := s.handlerMgr.GetHandler(ctx.Proto)
 	if f != nil {
-		err = s.gPool.Submit(func() {
-			f(context)
+		f(ctx)
+		return
+	}
+	gf := s.handlerMgr.GetGoHandler(ctx.Proto)
+	if gf != nil {
+		err := s.gPool.Submit(func() {
+			gf(ctx, struct{}{})
 		})
 		if err != nil {
 			glog.Logger.Sugar().Errorf("OnTraffic err:%s", err.Error())
 		}
-		//f(context)
 	} else {
-		glog.Logger.Sugar().Errorf("OnTraffic not found hander,proto:%d", context.Proto)
+		glog.Logger.Sugar().Errorf("OnTraffic not found hander,proto:%d", ctx.Proto)
 	}
-	return gnet.None
 }
 
 func (s *Server) OnClose(c gnet.Conn, err error) (action gnet.Action) {
@@ -72,7 +79,17 @@ func (s *Server) OnClose(c gnet.Conn, err error) (action gnet.Action) {
 	return gnet.None
 }
 func (s *Server) OnOpen(c gnet.Conn) (out []byte, action gnet.Action) {
+	cId := util.GenId(9)
+	c.SetId(cId)
 	s.connMgr.Add(c)
+	err := c.SetReadBuffer(conf.GameConfig.ConnReadBuffer)
+	if err != nil {
+		panic(err)
+	}
+	err = c.SetWriteBuffer(conf.GameConfig.ConnWriteBuffer)
+	if err != nil {
+		panic(err)
+	}
 	glog.Logger.Sugar().Infof("cid:%s connect", c.ID())
 	return nil, gnet.None
 }
@@ -80,27 +97,18 @@ func (s *Server) OnShutdown(e gnet.Engine) {
 
 }
 func (s *Server) OnTick() (delay time.Duration, action gnet.Action) {
-	delay = 200 * time.Millisecond
+	delay = 2 * time.Millisecond
+	glog.Logger.Info("a")
 	return
 }
 func (s *Server) Run() {
 	addr := fmt.Sprintf("tcp://:%d", conf.GameConfig.Port)
-	s.loop()
+	//protocol.InitBufferPool()
 	err := gnet.Run(s, addr, gnet.WithMulticore(true))
 	panic(err)
 }
-func (s *Server) loop() {
-	go func() {
-		for {
-			select {
-			case buf := <-s.rawChan:
-				s.connMgr.Broadcast(buf)
-			}
-		}
-	}()
-}
 
-func (s *Server) AddRouter(routers ...router.IGameObject) {
+func (s *Server) AddRouter(routers ...router.IRouter) {
 	for _, v := range routers {
 		s.handlerMgr.RegisterRouter(v.Init())
 	}

@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/panjf2000/gnet/v2 v2.1.1
+	github.com/valyala/bytebufferpool v1.0.0
 	go.uber.org/zap v1.23.0
 )
 

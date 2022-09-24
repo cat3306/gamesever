@@ -1,6 +1,6 @@
 {
   "host": "0.0.0.0",
-  "tcp_port": 8849,
+  "tcp_port": 8840,
   "max_conn": 1000,
   "conn_write_buffer": 1048576,
   "conn_read_buffer": 1048576

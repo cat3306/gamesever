@@ -30,7 +30,6 @@ var (
 	ErrIncompletePacket = errors.New("incomplete packet")
 )
 
-
 func Decode(c gnet.Conn) (*Context, error) {
 
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
@@ -61,7 +60,7 @@ func Decode(c gnet.Conn) (*Context, error) {
 	}
 	return packet, nil
 }
-func Encode(v interface{}, codeType CodeType, proto uint32) []byte {
+func Encode(v interface{}, codeType CodeType, proto uint32) ([]byte, int) {
 	if v == nil {
 		panic("v nil")
 	}
@@ -71,12 +70,13 @@ func Encode(v interface{}, codeType CodeType, proto uint32) []byte {
 	}
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
 	msgLen := bodyOffset + len(raw)
-	data := make([]byte, msgLen)
-	packetEndian.PutUint32(data, uint32(len(raw)))
-	packetEndian.PutUint32(data[payloadLen:], proto)
-	packetEndian.PutUint16(data[payloadLen+protocolLen:], uint16(codeType))
-	copy(data[bodyOffset:msgLen], raw)
-	return data
+	buffer := BUFFERPOOL.Get(uint32(msgLen))
+	//data := make([]byte, msgLen)
+	packetEndian.PutUint32(buffer, uint32(len(raw)))
+	packetEndian.PutUint32(buffer[payloadLen:], proto)
+	packetEndian.PutUint16(buffer[payloadLen+protocolLen:], uint16(codeType))
+	copy(buffer[bodyOffset:msgLen], raw)
+	return buffer, msgLen
 }
 
 func ReadFull(r io.Reader) ([]byte, uint32, uint16, error) {

@@ -3,6 +3,6 @@ package router
 type BaseRouter struct {
 }
 
-func (b *BaseRouter) Init() IGameObject {
+func (b *BaseRouter) Init() IRouter {
 	return b
 }

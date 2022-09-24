@@ -17,7 +17,7 @@ type RoomManager struct {
 
 var RoomMgr *RoomManager
 
-func (r *RoomManager) Init() IGameObject {
+func (r *RoomManager) Init() IRouter {
 	r.rooms = make(map[string]*Room)
 	RoomMgr = r
 	return r
@@ -50,7 +50,7 @@ func (r *RoomManager) CreateRoom(ctx *protocol.Context) {
 		gameState: false,
 		scene:     0,
 		Id:        util.GenId(7),
-		connMgr:   newConnManager(),
+		connMgr:   protocol.NewConnManager(),
 	}
 	room.connMgr.Add(ctx.Conn)
 	r.AddRoom(room)

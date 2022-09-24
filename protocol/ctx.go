@@ -16,40 +16,48 @@ type Context struct {
 	CodeType CodeType
 	Proto    uint32
 	Conn     gnet.Conn
-	rawChan  chan []byte
+	connMgr  *ConnManager
 }
 
 func (c *Context) Bind(v interface{}) error {
 	return GameCoder(c.CodeType).Unmarshal(c.Payload, v)
 }
 func (c *Context) Send(v interface{}) {
-	raw := Encode(v, c.CodeType, c.Proto)
-	err := c.Conn.AsyncWrite(raw, nil)
+	err := c.AsyncWrite(Encode(v, c.CodeType, c.Proto))
 	if err != nil {
 		glog.Logger.Sugar().Errorf("AsyncWrite err:%s", err.Error())
 	}
 }
 func (c *Context) SendWithCodeType(v interface{}, codeType CodeType) {
-	raw := Encode(v, codeType, c.Proto)
-	err := c.Conn.AsyncWrite(raw, nil)
+	err := c.AsyncWrite(Encode(v, c.CodeType, c.Proto))
 	if err != nil {
 		glog.Logger.Sugar().Errorf("AsyncWrite err:%s", err.Error())
 	}
 }
 func (c *Context) SendWithParams(v interface{}, codeType CodeType, method string) {
-	raw := Encode(v, codeType, util.MethodHash(method))
-	err := c.Conn.AsyncWrite(raw, nil)
+	err := c.AsyncWrite(Encode(v, codeType, util.MethodHash(method)))
 	if err != nil {
 		glog.Logger.Sugar().Errorf("AsyncWrite err:%s", err.Error())
 	}
 }
 
-func (c *Context) SetRawChan(rawChan chan []byte) {
-	c.rawChan = rawChan
+func (c *Context) AsyncWrite(raw []byte, msgLen int) error {
+	return c.Conn.AsyncWrite(raw[:msgLen], func(c gnet.Conn) error {
+		BUFFERPOOL.Put(raw)
+		return nil
+	})
+}
+func (c *Context) ReleaseBuffer() {
+
+}
+func (c *Context) SetConnMgr(connMgr *ConnManager) {
+	c.connMgr = connMgr
 }
 func (c *Context) GlobalBroadcast(v interface{}, ) {
-	raw := Encode(v, c.CodeType, c.Proto)
-	c.rawChan <- raw
+	if c.connMgr != nil {
+		raw, msgLen := Encode(v, c.CodeType, c.Proto)
+		c.connMgr.Broadcast(raw[:msgLen])
+	}
 }
 func (c *Context) SetUserId(uid string) {
 	c.Conn.SetProperty(userId, uid)

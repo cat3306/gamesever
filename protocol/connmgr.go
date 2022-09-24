@@ -1,8 +1,7 @@
-package engine
+package protocol
 
 import (
 	"github.com/cat3306/gameserver/glog"
-	"github.com/cat3306/gameserver/util"
 	"github.com/panjf2000/gnet/v2"
 	"sync"
 )
@@ -12,7 +11,7 @@ type ConnManager struct {
 	locker      sync.RWMutex
 }
 
-func newConnManager() *ConnManager {
+func NewConnManager() *ConnManager {
 	return &ConnManager{
 		connections: make(map[string]gnet.Conn),
 	}
@@ -20,9 +19,7 @@ func newConnManager() *ConnManager {
 func (c *ConnManager) Add(conn gnet.Conn) {
 	c.locker.Lock()
 	defer c.locker.Unlock()
-	cId := util.GenId(9)
-	conn.SetId(cId)
-	c.connections[cId] = conn
+	c.connections[conn.ID()] = conn
 }
 func (c *ConnManager) Remove(id string) {
 	c.locker.Lock()
@@ -38,4 +35,22 @@ func (c *ConnManager) Broadcast(raw []byte) {
 			glog.Logger.Sugar().Errorf("AsyncWrite err:%s", err.Error())
 		}
 	}
+}
+func (c *ConnManager) BroadcastExceptSelf(raw []byte, cid string) {
+	c.locker.RLock()
+	defer c.locker.RUnlock()
+	for _, v := range c.connections {
+		if v.ID() == cid {
+			continue
+		}
+		err := v.AsyncWrite(raw, nil)
+		if err != nil {
+			glog.Logger.Sugar().Errorf("AsyncWrite err:%s", err.Error())
+		}
+	}
+}
+func (c *ConnManager) Len() int {
+	c.locker.Lock()
+	defer c.locker.Unlock()
+	return len(c.connections)
 }
