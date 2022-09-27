@@ -7,11 +7,17 @@ import (
 )
 
 type GlobalConf struct {
-	Ip              string `json:"host"`     //ip
-	Port            int    `json:"tcp_port"` //port
-	MaxConn         int    `json:"max_conn"` //最大连接数
-	ConnWriteBuffer int    `json:"conn_write_buffer"`
-	ConnReadBuffer  int    `json:"conn_read_buffer"`
+	Ip              string      `json:"host"`     //ip
+	Port            int         `json:"tcp_port"` //port
+	MaxConn         int         `json:"max_conn"` //最大连接数
+	ConnWriteBuffer int         `json:"conn_write_buffer"`
+	ConnReadBuffer  int         `json:"conn_read_buffer"`
+	Mysql           MysqlConfig `json:"mysql"`
+}
+type MysqlConfig struct {
+	MysqlConn            string `json:"mysql_conn"`
+	MysqlConnectPoolSize int    `json:"mysql_connect_pool_size"`
+	SetLog               bool   `json:"set_log"`
 }
 
 var GameConfig *GlobalConf
@@ -25,7 +31,7 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	GameConfig=gameConfig
+	GameConfig = gameConfig
 }
 func LoadJsonConfigLocal(file string, v interface{}) error {
 	b, err := ioutil.ReadFile(file)

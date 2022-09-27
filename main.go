@@ -5,6 +5,7 @@ import (
 	"github.com/cat3306/gameserver/engine"
 	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/router"
+	"github.com/cat3306/gameserver/thirdmodule"
 	"math/rand"
 	"time"
 )
@@ -19,5 +20,6 @@ func main() {
 		new(router.RoomManager),
 		new(router.GameManager),
 	)
+	thirdmodule.Init()
 	e.Run()
 }

@@ -1,0 +1,25 @@
+services:
+  MYSQLDB:
+    image: mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    container_name: MYSQLDB
+    command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=+08:00' ]
+    ports:
+      - 3309:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=12345678
+      - TZ=Asia/Shanghai
+  pixelzombie:
+    image: cat19/gameserver
+    ports:
+      - 8840:8840
+    restart: always
+    container_name: GameServer
+    environment:
+      - DB_HOST=MysqlDb
+    depends_on:
+      - MYSQLDB
+volumes:
+  db_data:

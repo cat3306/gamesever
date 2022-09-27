@@ -3,5 +3,10 @@
   "tcp_port": 8840,
   "max_conn": 1000,
   "conn_write_buffer": 1048576,
-  "conn_read_buffer": 1048576
+  "conn_read_buffer": 1048576,
+  "mysql": {
+    "mysql_conn": "root:12345678@(MysqlDb:3306)/?charset=utf8mb4&parseTime=True&loc=Local",
+    "mysql_connect_pool_size": 20,
+    "set_log": true
+  }
 }
