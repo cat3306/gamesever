@@ -10,7 +10,7 @@ import (
 //
 // * 0                       4                       8           10
 // * +-----------------------+-----------------------+-----------+
-// * |   body len    		 |       protocol len    | code type |
+// * |   body len    		 |       protocol        | code type |
 // * +-----------------------+-----------------------+-----------+
 // * |                                   			 			 |
 // * +                                       		             +
@@ -28,6 +28,7 @@ const (
 var (
 	packetEndian        = binary.LittleEndian
 	ErrIncompletePacket = errors.New("incomplete packet")
+	ErrTooLargePacket   = errors.New("too large packet")
 )
 
 func Decode(c gnet.Conn) (*Context, error) {
@@ -37,10 +38,15 @@ func Decode(c gnet.Conn) (*Context, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	bodyLen := packetEndian.Uint32(buf[:payloadLen])
 	protocol := packetEndian.Uint32(buf[payloadLen : payloadLen+protocolLen])
 	codeType := packetEndian.Uint16(buf[payloadLen+protocolLen : payloadLen+protocolLen+codeTypeLen])
 	msgLen := bodyOffset + int(bodyLen)
+	if msgLen > maxByte {
+		c.Close()
+		return nil, ErrTooLargePacket
+	}
 	if c.InboundBuffered() < msgLen {
 		return nil, ErrIncompletePacket
 	}
@@ -76,6 +82,17 @@ func Encode(v interface{}, codeType CodeType, proto uint32) ([]byte, int) {
 	packetEndian.PutUint32(buffer[payloadLen:], proto)
 	packetEndian.PutUint16(buffer[payloadLen+protocolLen:], uint16(codeType))
 	copy(buffer[bodyOffset:msgLen], raw)
+	return buffer, msgLen
+}
+func EncodeBin(bin []byte, codeType CodeType, proto uint32) ([]byte, int) {
+	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
+	msgLen := bodyOffset + len(bin)
+	buffer := BUFFERPOOL.Get(uint32(msgLen))
+	//data := make([]byte, msgLen)
+	packetEndian.PutUint32(buffer, uint32(len(bin)))
+	packetEndian.PutUint32(buffer[payloadLen:], proto)
+	packetEndian.PutUint16(buffer[payloadLen+protocolLen:], uint16(codeType))
+	copy(buffer[bodyOffset:msgLen], bin)
 	return buffer, msgLen
 }
 

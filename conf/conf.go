@@ -13,8 +13,13 @@ type GlobalConf struct {
 	ConnWriteBuffer int         `json:"conn_write_buffer"`
 	ConnReadBuffer  int         `json:"conn_read_buffer"`
 	Mysql           MysqlConfig `json:"mysql"`
+	IsAuth          bool        `json:"is_auth"`
 }
 type MysqlConfig struct {
+	Host                 string `json:"host"`
+	Port                 int    `json:"port"`
+	User                 string `json:"user"`
+	Pwd                  string `json:"pwd"`
 	MysqlConn            string `json:"mysql_conn"`
 	MysqlConnectPoolSize int    `json:"mysql_connect_pool_size"`
 	SetLog               bool   `json:"set_log"`

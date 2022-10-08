@@ -5,6 +5,7 @@ import (
 	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
 	"github.com/cat3306/gameserver/util"
+	"io/ioutil"
 	"net"
 	"os"
 	"testing"
@@ -18,8 +19,6 @@ func Conn() net.Conn {
 		fmt.Println(err)
 		os.Exit(0)
 	}
-	tc := conn.(*net.TCPConn)
-	tc.SetReadBuffer(1)
 	return conn
 }
 func init() {
@@ -62,13 +61,14 @@ func heartBeat(conn net.Conn, isGo bool) {
 		m = "GoHeartBeat"
 	}
 	raw, msgLen := protocol.Encode("💓", protocol.String, util.MethodHash(m))
+
 	for {
 		_, err := conn.Write(raw[:msgLen])
 		if err != nil {
 			fmt.Println("write error err ", err)
 			return
 		}
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
@@ -120,4 +120,19 @@ func joinRoom(conn net.Conn) {
 		return
 	}
 	select {}
+}
+
+func TestBinFile(t *testing.T) {
+	conn := Conn()
+	receive(conn)
+	binFile(conn)
+}
+func binFile(conn net.Conn) {
+	bin, err := ioutil.ReadFile("/Users/joker/Downloads/GitHubDesktop-x64.zip")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	raw, msgLen := protocol.EncodeBin(bin, protocol.String, util.MethodHash("TestBinFile"))
+	_, err = conn.Write(raw[:msgLen])
+	fmt.Println(err)
 }

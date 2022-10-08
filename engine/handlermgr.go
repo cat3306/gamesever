@@ -12,14 +12,16 @@ import (
 
 type Handler func(c *protocol.Context)
 type GoHandler func(c *protocol.Context, none struct{})
+type SHandler func(c *protocol.Context, v interface{})
 
 func NewHandlerManager() *HandlerManager {
 	ctx, f := context.WithCancel(context.Background())
 	return &HandlerManager{
-		handlers:  make(map[uint32]Handler),
-		goHandler: make(map[uint32]GoHandler),
-		ctx:       ctx,
-		cancel:    f,
+		handlers:        make(map[uint32]Handler),
+		goHandler:       make(map[uint32]GoHandler),
+		specialHandlers: make(map[uint32]SHandler),
+		ctx:             ctx,
+		cancel:          f,
 	}
 }
 
@@ -28,11 +30,13 @@ type HandlerCtx struct {
 	f   Handler
 }
 type HandlerManager struct {
-	handlers  map[uint32]Handler
-	goHandler map[uint32]GoHandler
-	taskQueue chan *HandlerCtx
-	ctx       context.Context
-	cancel    context.CancelFunc
+	handlers        map[uint32]Handler
+	goHandler       map[uint32]GoHandler
+	specialHandlers map[uint32]SHandler
+	taskQueue       chan *HandlerCtx
+	ctx             context.Context
+	cancel          context.CancelFunc
+	authHandler     Handler
 }
 
 func (h *HandlerManager) Register(hashCode uint32, handler Handler) {
@@ -46,6 +50,12 @@ func (h *HandlerManager) GoRegister(hashCode uint32, handler GoHandler) {
 		panic(fmt.Sprintf("Register repeated method:%d", hashCode))
 	}
 	h.goHandler[hashCode] = handler
+}
+func (h *HandlerManager) SpecialRegister(hashCode uint32, handler SHandler) {
+	if _, ok := h.specialHandlers[hashCode]; ok {
+		panic(fmt.Sprintf("Register repeated method:%d", hashCode))
+	}
+	h.specialHandlers[hashCode] = handler
 }
 func (h *HandlerManager) RegisterRouter(iG router.IRouter) {
 	t := reflect.TypeOf(iG)
@@ -67,6 +77,14 @@ func (h *HandlerManager) RegisterRouter(iG router.IRouter) {
 				hashId := util.MethodHash(name)
 				h.GoRegister(hashId, v1)
 				glog.Logger.Sugar().Infof("[%s.go_%s] hashId:%d", tName, name, hashId)
+			}
+		}
+		v2, ok2 := vl.Method(i).Interface().(func(c *protocol.Context, v interface{}))
+		if ok2 {
+			if checkoutMethod(name) {
+				hashId := util.MethodHash(name)
+				h.SpecialRegister(hashId, v2)
+				glog.Logger.Sugar().Infof("[%s.special_%s] hashId:%d", tName, name, hashId)
 			}
 		}
 	}
@@ -91,5 +109,9 @@ func (h *HandlerManager) GetHandler(proto uint32) Handler {
 }
 func (h *HandlerManager) GetGoHandler(proto uint32) GoHandler {
 	f, _ := h.goHandler[proto]
+	return f
+}
+func (h *HandlerManager) GetSHandler(proto uint32) SHandler {
+	f, _ := h.specialHandlers[proto]
 	return f
 }

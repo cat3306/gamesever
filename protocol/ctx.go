@@ -9,6 +9,7 @@ import (
 const (
 	userId = "user_id"
 	roomId = "room_id"
+	Auth   = "auth"
 )
 
 type Context struct {

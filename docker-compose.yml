@@ -11,15 +11,13 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=12345678
       - TZ=Asia/Shanghai
-  pixelzombie:
+  gameserver:
     image: cat19/gameserver
     ports:
       - 8840:8840
     restart: always
     container_name: GameServer
-    environment:
-      - DB_HOST=MysqlDb
-    depends_on:
-      - MYSQLDB
+    links:
+      - MYSQLDB:MysqlDb
 volumes:
   db_data:

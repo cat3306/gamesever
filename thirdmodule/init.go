@@ -6,5 +6,8 @@ import (
 )
 
 func Init() {
-	util.PanicRepeatRun(InitDb, "InitDb", time.Second)
+	util.PanicRepeatRun(InitDb, util.PanicRepeatRunArgs{
+		Sleep: time.Second,
+		Try:   3,
+	})
 }

@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
 	"unsafe"
 )
@@ -15,8 +16,9 @@ func (r *rawString) ToString() string {
 func (r *rawString) Unmarshal(b []byte, v interface{}) error {
 	if vv, ok := v.(*string); ok {
 		*vv = *(*string)(unsafe.Pointer(&b))
+		return nil
 	}
-	return nil
+	return errors.New("v type not string")
 }
 func (r *rawString) Marshal(v interface{}) ([]byte, error) {
 	if vv, ok := v.(string); ok {

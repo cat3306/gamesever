@@ -8,5 +8,6 @@
     "mysql_conn": "root:12345678@(MysqlDb:3306)/?charset=utf8mb4&parseTime=True&loc=Local",
     "mysql_connect_pool_size": 20,
     "set_log": true
-  }
+  },
+  "is_auth": true
 }

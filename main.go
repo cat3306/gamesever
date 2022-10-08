@@ -19,6 +19,7 @@ func main() {
 		new(router.HeartBeat),
 		new(router.RoomManager),
 		new(router.GameManager),
+		new(router.ClientAuth),
 	)
 	thirdmodule.Init()
 	e.Run()
