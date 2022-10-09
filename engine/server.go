@@ -34,6 +34,12 @@ func (s *Server) OnBoot(e gnet.Engine) (action gnet.Action) {
 	return
 }
 func (s *Server) OnTraffic(c gnet.Conn) gnet.Action {
+	defer func() {
+		err := recover()
+		if err != nil {
+			glog.Logger.Sugar().Errorf("OnTraffic panic %v", err)
+		}
+	}()
 	s.eng.CountConnections()
 	context, err := protocol.Decode(c)
 	if err != nil {

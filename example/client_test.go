@@ -8,7 +8,6 @@ import (
 	"github.com/cat3306/gocommon/cryptoutil"
 	"io/ioutil"
 	"net"
-	"os"
 	"testing"
 	"time"
 )
@@ -18,7 +17,7 @@ func Conn() net.Conn {
 	conn, err := net.Dial("tcp", "127.0.0.1:8840")
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(0)
+		//os.Exit(0)
 	}
 	return conn
 }
@@ -48,12 +47,17 @@ func TestGoHeartBeat(t *testing.T) {
 	heartBeat(conn, true)
 }
 func TestHearBeatMore(t *testing.T) {
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1000; i++ {
 		go func() {
 			conn := Conn()
+			if conn == nil {
+				return
+			}
+			auth(conn)
 			receive(conn)
 			heartBeat(conn, false)
 		}()
+		time.Sleep(time.Millisecond * 20)
 	}
 	select {}
 }
@@ -70,7 +74,7 @@ func heartBeat(conn net.Conn, isGo bool) {
 			fmt.Println("write error err ", err)
 			return
 		}
-		time.Sleep(16 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 	}
 }
 

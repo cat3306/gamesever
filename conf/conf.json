@@ -11,7 +11,7 @@
   },
   "auth_config": {
     "is_auth": true,
-    "public_key_path": "/Users/joker/code/go/src/github.com/cat3306/gameserver/conf/public_key.pem",
-    "private_key_path": "/Users/joker/code/go/src/github.com/cat3306/gameserver/conf/private_key.pem"
+    "public_key_path": "./public_key.pem",
+    "private_key_path": "./private_key.pem"
   }
 }
