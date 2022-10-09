@@ -5,6 +5,7 @@ import (
 	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
 	"github.com/cat3306/gameserver/util"
+	"github.com/cat3306/gocommon/cryptoutil"
 	"io/ioutil"
 	"net"
 	"os"
@@ -37,6 +38,7 @@ func receive(conn net.Conn) {
 }
 func TestHeartBeat(t *testing.T) {
 	conn := Conn()
+	auth(conn)
 	receive(conn)
 	heartBeat(conn, false)
 }
@@ -68,7 +70,7 @@ func heartBeat(conn net.Conn, isGo bool) {
 			fmt.Println("write error err ", err)
 			return
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(16 * time.Millisecond)
 	}
 }
 
@@ -133,6 +135,28 @@ func binFile(conn net.Conn) {
 		fmt.Println(err.Error())
 	}
 	raw, msgLen := protocol.EncodeBin(bin, protocol.String, util.MethodHash("TestBinFile"))
+	_, err = conn.Write(raw[:msgLen])
+	fmt.Println(err)
+}
+
+func TestAuth(t *testing.T) {
+	conn := Conn()
+	receive(conn)
+	auth(conn)
+}
+func auth(conn net.Conn) {
+	var req struct {
+		CipherText []byte `json:"CipherText"`
+		Text       string `json:"Text"`
+	}
+	req.Text = "life is short"
+	pubKey, err := cryptoutil.RawRSAKey("./public_key.pem")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	req.CipherText = cryptoutil.RsaEncrypt([]byte(req.Text), pubKey)
+	raw, msgLen := protocol.Encode(req, protocol.Json, util.MethodHash("ClientAuth"))
 	_, err = conn.Write(raw[:msgLen])
 	fmt.Println(err)
 }

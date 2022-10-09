@@ -9,7 +9,7 @@ var Logger *zap.Logger
 
 func Init() {
 	logger, err := zap.Config{
-		Encoding:    "json",
+		Encoding:    "console",
 		Level:       zap.NewAtomicLevelAt(zapcore.DebugLevel),
 		OutputPaths: []string{"stderr"},
 		EncoderConfig: zapcore.EncoderConfig{

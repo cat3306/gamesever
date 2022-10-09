@@ -9,5 +9,9 @@
     "mysql_connect_pool_size": 20,
     "set_log": true
   },
-  "is_auth": true
+  "auth_config": {
+    "is_auth": true,
+    "public_key_path": "/Users/joker/code/go/src/github.com/cat3306/gameserver/conf/public_key.pem",
+    "private_key_path": "/Users/joker/code/go/src/github.com/cat3306/gameserver/conf/private_key.pem"
+  }
 }

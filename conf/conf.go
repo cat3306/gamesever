@@ -13,7 +13,12 @@ type GlobalConf struct {
 	ConnWriteBuffer int         `json:"conn_write_buffer"`
 	ConnReadBuffer  int         `json:"conn_read_buffer"`
 	Mysql           MysqlConfig `json:"mysql"`
-	IsAuth          bool        `json:"is_auth"`
+	AuthConfig      AuthConfig  `json:"auth_config"`
+}
+type AuthConfig struct {
+	IsAuth         bool   `json:"is_auth"` //是否客户端验签
+	PublicKeyPath  string `json:"public_key_path"`
+	PrivateKeyPath string `json:"private_key_path"`
 }
 type MysqlConfig struct {
 	Host                 string `json:"host"`

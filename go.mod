@@ -3,6 +3,7 @@ module github.com/cat3306/gameserver
 go 1.17
 
 require (
+	github.com/cat3306/gocommon v0.0.0-20220928082613-e2f80e79aec8
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/panjf2000/gnet/v2 v2.1.1
 	github.com/valyala/bytebufferpool v1.0.0

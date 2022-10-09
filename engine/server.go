@@ -50,8 +50,16 @@ func (s *Server) OnTraffic(c gnet.Conn) gnet.Action {
 func (s *Server) onConnAuth(c gnet.Conn) bool {
 	ok := c.GetProperty(protocol.Auth)
 	if ok == "" {
-		protocol.Encode("auth error ", protocol.String, 0)
-		c.Close()
+		ip := c.RemoteAddr()
+		f := func(raw []byte, msgLen int) error {
+			return c.AsyncWrite(raw[:msgLen], func(c gnet.Conn) error {
+				protocol.BUFFERPOOL.Put(raw)
+				c.Close()
+				return nil
+			})
+		}
+		err := f(protocol.Encode("auth error ", protocol.String, 0))
+		glog.Logger.Sugar().Errorf("onConnAuth auth falied err:%v,ip:%s", err, ip.String())
 		return false
 	}
 	return true
@@ -80,16 +88,15 @@ func (s *Server) executeHandler(ctx *protocol.Context) error {
 	return fmt.Errorf("not found hander,proto:%d", ctx.Proto)
 }
 func (s *Server) exeHandler(ctx *protocol.Context) {
-	if conf.GameConfig.IsAuth {
+	if conf.GameConfig.AuthConfig.IsAuth {
 		sf := s.handlerMgr.GetSHandler(ctx.Proto)
 		if sf != nil {
 			sf(ctx, nil)
 			return
 		}
 	}
-	if conf.GameConfig.IsAuth {
+	if conf.GameConfig.AuthConfig.IsAuth {
 		if !s.onConnAuth(ctx.Conn) {
-
 			return
 		}
 	}

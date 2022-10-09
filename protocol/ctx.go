@@ -48,9 +48,6 @@ func (c *Context) AsyncWrite(raw []byte, msgLen int) error {
 		return nil
 	})
 }
-func (c *Context) ReleaseBuffer() {
-
-}
 func (c *Context) SetConnMgr(connMgr *ConnManager) {
 	c.connMgr = connMgr
 }
