@@ -37,10 +37,15 @@ func PanicRepeatRun(f func(), args ...PanicRepeatRunArgs) {
 	if param.Try == 0 {
 		param.Try = math.MaxInt16
 	}
+	total := param.Try
 	for !runPanicLess(f) && param.Try >= 1 {
 		if param.Sleep != 0 {
 			time.Sleep(param.Sleep)
 		}
 		param.Try--
+	}
+	if param.Try == 0 {
+		name := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+		glog.Logger.Sugar().Errorf("%s:finally failed,total:%d", name, total)
 	}
 }

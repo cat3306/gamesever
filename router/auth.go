@@ -43,10 +43,10 @@ func (c *ClientAuth) ClientAuth(ctx *protocol.Context, v interface{}) {
 	text := cryptoutil.RsaDecrypt(req.CipherText, c.rawPrivateKey)
 	if string(text) != req.Text {
 		glog.Logger.Sugar().Errorf("认证失败!")
-		ctx.Send(JsonRspErr("认证失败"))
+		ctx.Send(JsonRspErr("auth failed"))
 		time.Sleep(time.Second)
 	} else {
 		ctx.Conn.SetProperty(protocol.Auth, "ok")
-		ctx.Send(JsonRspOK("认证成功"))
+		ctx.Send(JsonRspOK("auth ok"))
 	}
 }

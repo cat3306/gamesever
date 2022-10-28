@@ -17,6 +17,10 @@ services:
       - 8840:8840
     restart: always
     container_name: GameServer
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     links:
       - MYSQLDB:MysqlDb
 volumes:

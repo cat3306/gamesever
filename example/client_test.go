@@ -47,7 +47,7 @@ func TestGoHeartBeat(t *testing.T) {
 	heartBeat(conn, true)
 }
 func TestHearBeatMore(t *testing.T) {
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		go func() {
 			conn := Conn()
 			if conn == nil {

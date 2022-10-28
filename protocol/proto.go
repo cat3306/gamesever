@@ -3,8 +3,9 @@ package protocol
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/panjf2000/gnet/v2"
 	"io"
+
+	"github.com/panjf2000/gnet/v2"
 )
 
 //
@@ -97,7 +98,7 @@ func EncodeBin(bin []byte, codeType CodeType, proto uint32) ([]byte, int) {
 }
 
 func ReadFull(r io.Reader) ([]byte, uint32, uint16, error) {
-	preBuff := make([]byte, 10, 10)
+	preBuff := make([]byte, 10)
 	_, err := io.ReadFull(r, preBuff)
 	if err != nil {
 		return nil, 0, 0, err
@@ -105,7 +106,7 @@ func ReadFull(r io.Reader) ([]byte, uint32, uint16, error) {
 	bodyLen := packetEndian.Uint32(preBuff[:payloadLen])
 	protocol := packetEndian.Uint32(preBuff[payloadLen : payloadLen+protocolLen])
 	codeType := packetEndian.Uint16(preBuff[payloadLen+protocolLen : payloadLen+protocolLen+codeTypeLen])
-	payload := make([]byte, bodyLen, bodyLen)
+	payload := make([]byte, bodyLen)
 	_, err = io.ReadFull(r, payload)
 	if err != nil {
 		return nil, 0, 0, err

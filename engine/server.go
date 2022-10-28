@@ -8,12 +8,10 @@ import (
 	"github.com/cat3306/gameserver/router"
 	"github.com/cat3306/gameserver/util"
 	"github.com/panjf2000/gnet/v2"
-	"github.com/panjf2000/gnet/v2/pkg/pool/goroutine"
 	"time"
 )
 
 type Server struct {
-	gPool   *goroutine.Pool
 	connMgr *protocol.ConnManager
 	gnet.BuiltinEventEngine
 	eng        gnet.Engine
@@ -21,10 +19,8 @@ type Server struct {
 }
 
 func NewEngine() *Server {
-
 	return &Server{
 		connMgr:    protocol.NewConnManager(),
-		gPool:      goroutine.Default(),
 		handlerMgr: NewHandlerManager(),
 	}
 }
@@ -50,66 +46,8 @@ func (s *Server) OnTraffic(c gnet.Conn) gnet.Action {
 		panic("context nil")
 	}
 	context.SetConnMgr(s.connMgr)
-	s.exeHandler(context)
+	s.handlerMgr.ExeHandler(conf.GameConfig.AuthConfig.IsAuth, context)
 	return gnet.None
-}
-func (s *Server) onConnAuth(c gnet.Conn) bool {
-	ok := c.GetProperty(protocol.Auth)
-	if ok == "" {
-		ip := c.RemoteAddr()
-		f := func(raw []byte, msgLen int) error {
-			return c.AsyncWrite(raw[:msgLen], func(c gnet.Conn) error {
-				protocol.BUFFERPOOL.Put(raw)
-				c.Close()
-				return nil
-			})
-		}
-		err := f(protocol.Encode("auth error ", protocol.String, 0))
-		glog.Logger.Sugar().Errorf("onConnAuth auth falied err:%v,ip:%s", err, ip.String())
-		return false
-	}
-	return true
-}
-func (s *Server) executeHandler(ctx *protocol.Context) error {
-	// 同步
-
-	f := s.handlerMgr.GetHandler(ctx.Proto)
-
-	if f != nil {
-		f(ctx)
-		return nil
-	}
-	// 异步
-	gf := s.handlerMgr.GetGoHandler(ctx.Proto)
-	if gf != nil {
-
-		err := s.gPool.Submit(func() {
-			gf(ctx, struct{}{})
-		})
-		if err != nil {
-			glog.Logger.Sugar().Errorf("executeHandler err:%s", err.Error())
-		}
-		return nil
-	}
-	return fmt.Errorf("not found hander,proto:%d", ctx.Proto)
-}
-func (s *Server) exeHandler(ctx *protocol.Context) {
-	if conf.GameConfig.AuthConfig.IsAuth {
-		sf := s.handlerMgr.GetSHandler(ctx.Proto)
-		if sf != nil {
-			sf(ctx, nil)
-			return
-		}
-	}
-	if conf.GameConfig.AuthConfig.IsAuth {
-		if !s.onConnAuth(ctx.Conn) {
-			return
-		}
-	}
-	err := s.executeHandler(ctx)
-	if err != nil {
-		glog.Logger.Sugar().Errorf("executeHandler err:%s", err.Error())
-	}
 }
 func (s *Server) OnClose(c gnet.Conn, err error) (action gnet.Action) {
 	reason := ""
@@ -148,6 +86,9 @@ func (s *Server) Run() {
 		)
 		panic(err)
 	}
+	defer func() {
+		s.handlerMgr.gPool.Release()
+	}()
 	util.PanicRepeatRun(f, util.PanicRepeatRunArgs{
 		Sleep: time.Second,
 		Try:   20,

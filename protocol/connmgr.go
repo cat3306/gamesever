@@ -50,7 +50,7 @@ func (c *ConnManager) BroadcastExceptSelf(raw []byte, cid string) {
 	}
 }
 func (c *ConnManager) Len() int {
-	c.locker.Lock()
-	defer c.locker.Unlock()
+	c.locker.RLock()
+	defer c.locker.RUnlock()
 	return len(c.connections)
 }
