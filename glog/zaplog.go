@@ -15,7 +15,7 @@ func Init() {
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:  "message",
 			LevelKey:    "level",
-			EncodeLevel: zapcore.CapitalLevelEncoder, // INFO
+			EncodeLevel: zapcore.CapitalColorLevelEncoder, // INFO
 
 			TimeKey:    "time",
 			EncodeTime: zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05.000"),
@@ -23,6 +23,8 @@ func Init() {
 			CallerKey:        "caller",
 			EncodeCaller:     zapcore.ShortCallerEncoder,
 			ConsoleSeparator: " ",
+
+
 			//FunctionKey:      "func",
 		},
 	}.Build()

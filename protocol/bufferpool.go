@@ -41,7 +41,7 @@ type BufferPool struct {
 func (b *BufferPool) Put(bs []byte) {
 	p := b.pool[uint32(cap(bs))]
 	if p != nil {
-		p.Put(bs)
+		p.Put(&bs)
 	}
 }
 func (b *BufferPool) Get(l uint32) []byte {
