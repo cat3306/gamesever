@@ -24,7 +24,8 @@ func init() {
 		tmpCap := rawDataCap
 		bp.pool[tmpCap] = &sync.Pool{
 			New: func() interface{} {
-				return make([]byte, tmpCap)
+				slice := make([]byte, tmpCap)
+				return &slice
 			},
 		}
 		//fmt.Println(rawDataCap)
@@ -44,7 +45,7 @@ func (b *BufferPool) Put(bs []byte) {
 		p.Put(&bs)
 	}
 }
-func (b *BufferPool) Get(l uint32) []byte {
+func (b *BufferPool) Get(l uint32) *[]byte {
 	offset := int(math.Log2(float64(b.capSlice[0])))
 
 	index := int(math.Ceil(math.Log2(float64(l))))
@@ -62,5 +63,5 @@ func (b *BufferPool) Get(l uint32) []byte {
 	}
 	capSize := b.capSlice[index]
 	p := b.pool[capSize]
-	return p.Get().([]byte)
+	return p.Get().(*[]byte)
 }

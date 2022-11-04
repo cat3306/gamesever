@@ -1,0 +1,8 @@
+syntax = "proto3";
+option go_package = "./";
+// this is a comment
+message Position {
+  double X = 1;
+  double Y = 2;
+  double Z = 3;
+}

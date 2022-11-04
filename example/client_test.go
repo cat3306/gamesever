@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
+	"github.com/cat3306/gameserver/router/protoc"
 	"github.com/cat3306/gameserver/util"
 	"github.com/cat3306/gocommon/cryptoutil"
 	"io/ioutil"
@@ -149,10 +150,11 @@ func TestAuth(t *testing.T) {
 	auth(conn)
 }
 func auth(conn net.Conn) {
-	var req struct {
-		CipherText []byte `json:"CipherText"`
-		Text       string `json:"Text"`
-	}
+	//var req struct {
+	//	CipherText []byte `json:"CipherText"`
+	//	Text       string `json:"Text"`
+	//}
+	req := protoc.AuthRequest{}
 	req.Text = "life is short"
 	pubKey, err := cryptoutil.RawRSAKey("./public_key.pem")
 	if err != nil {
@@ -160,7 +162,28 @@ func auth(conn net.Conn) {
 		return
 	}
 	req.CipherText = cryptoutil.RsaEncrypt([]byte(req.Text), pubKey)
-	raw, msgLen := protocol.Encode(req, protocol.Json, util.MethodHash("ClientAuth"))
+	raw, msgLen := protocol.Encode(&req, protocol.ProtoBuffer, util.MethodHash("ClientAuth"))
 	_, err = conn.Write(raw[:msgLen])
 	fmt.Println(err)
+}
+
+func TestProtoBuffer(t *testing.T) {
+	conn := Conn()
+	receive(conn)
+	auth(conn)
+	protoBuffer(conn)
+}
+func protoBuffer(conn net.Conn) {
+	req := &protoc.Position{
+		X: 1.1,
+		Y: 3.1,
+		Z: 2.1,
+	}
+	raw, msgLen := protocol.Encode(req, protocol.ProtoBuffer, util.MethodHash("TestProtoBuffer"))
+	_, err := conn.Write(raw[:msgLen])
+	if err != nil {
+		fmt.Println("write error err ", err)
+		return
+	}
+	select {}
 }

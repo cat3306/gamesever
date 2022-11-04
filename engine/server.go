@@ -2,13 +2,14 @@ package engine
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/cat3306/gameserver/conf"
 	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
 	"github.com/cat3306/gameserver/router"
 	"github.com/cat3306/gameserver/util"
 	"github.com/panjf2000/gnet/v2"
-	"time"
 )
 
 type Server struct {
@@ -30,12 +31,12 @@ func (s *Server) OnBoot(e gnet.Engine) (action gnet.Action) {
 	return
 }
 func (s *Server) OnTraffic(c gnet.Conn) gnet.Action {
-	defer func() {
-		err := recover()
-		if err != nil {
-			glog.Logger.Sugar().Errorf("OnTraffic panic %v", err)
-		}
-	}()
+	//defer func() {
+	//	err := recover()
+	//	if err != nil {
+	//		glog.Logger.Sugar().Errorf("OnTraffic panic %v", err)
+	//	}
+	//}()
 	s.eng.CountConnections()
 	context, err := protocol.Decode(c)
 	if err != nil {

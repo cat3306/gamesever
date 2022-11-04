@@ -3,18 +3,19 @@ package engine
 import (
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/cat3306/gameserver/glog"
 	"github.com/cat3306/gameserver/protocol"
 	"github.com/cat3306/gameserver/router"
 	"github.com/cat3306/gameserver/util"
 	"github.com/panjf2000/gnet/v2"
 	"github.com/panjf2000/gnet/v2/pkg/pool/goroutine"
-	"reflect"
 )
 
 var (
-	HandlerNotFound   = errors.New("handler not found")
-	HandlerAuthFailed = errors.New("handler auth failed")
+	ErrHandlerNotFound   = errors.New("handler not found")
+	ErrHandlerAuthFailed = errors.New("handler auth failed")
 )
 
 type Handler func(c *protocol.Context)
@@ -30,15 +31,10 @@ func NewHandlerManager() *HandlerManager {
 	}
 }
 
-type HandlerCtx struct {
-	Ctx *protocol.Context
-	f   Handler
-}
 type HandlerManager struct {
 	handlers        map[uint32]Handler
 	goHandler       map[uint32]GoHandler
 	specialHandlers map[uint32]SHandler
-	taskQueue       chan *HandlerCtx
 	gPool           *goroutine.Pool
 }
 
@@ -93,7 +89,6 @@ func (h *HandlerManager) RegisterRouter(iG router.IRouter) {
 	}
 }
 
-
 //函数签名首字母大写才会被注入
 func checkoutMethod(m string) bool {
 	if len(m) == 0 {
@@ -105,15 +100,15 @@ func checkoutMethod(m string) bool {
 	return false
 }
 func (h *HandlerManager) GetHandler(proto uint32) Handler {
-	f, _ := h.handlers[proto]
+	f := h.handlers[proto]
 	return f
 }
 func (h *HandlerManager) GetGoHandler(proto uint32) GoHandler {
-	f, _ := h.goHandler[proto]
+	f := h.goHandler[proto]
 	return f
 }
 func (h *HandlerManager) GetSHandler(proto uint32) SHandler {
-	f, _ := h.specialHandlers[proto]
+	f := h.specialHandlers[proto]
 	return f
 }
 func (h *HandlerManager) checkConnAuth(c gnet.Conn) bool {
@@ -140,13 +135,13 @@ func (h *HandlerManager) exeSyncHandler(auth bool, ctx *protocol.Context) error 
 	if f != nil {
 		if auth {
 			if !h.checkConnAuth(ctx.Conn) {
-				return HandlerAuthFailed
+				return ErrHandlerAuthFailed
 			}
 		}
 		f(ctx)
 		return nil
 	}
-	return HandlerNotFound
+	return ErrHandlerNotFound
 }
 
 //异步handler
@@ -155,7 +150,7 @@ func (h *HandlerManager) exeAsyncHandler(auth bool, ctx *protocol.Context) error
 	if f != nil {
 		if auth {
 			if !h.checkConnAuth(ctx.Conn) {
-				return HandlerAuthFailed
+				return ErrHandlerAuthFailed
 			}
 		}
 		err := h.gPool.Submit(func() {
@@ -167,7 +162,7 @@ func (h *HandlerManager) exeAsyncHandler(auth bool, ctx *protocol.Context) error
 		}
 		return nil
 	}
-	return HandlerNotFound
+	return ErrHandlerNotFound
 }
 
 func (h *HandlerManager) exeNotNeedAuthHandler(ctx *protocol.Context) error {
@@ -176,15 +171,15 @@ func (h *HandlerManager) exeNotNeedAuthHandler(ctx *protocol.Context) error {
 		f(ctx, nil)
 		return nil
 	}
-	return HandlerNotFound
+	return ErrHandlerNotFound
 }
 func (h *HandlerManager) ExeHandler(auth bool, ctx *protocol.Context) {
 	err := h.exeSyncHandler(auth, ctx)
-	if !errors.Is(err, HandlerNotFound) {
+	if !errors.Is(err, ErrHandlerNotFound) {
 		return
 	}
 	err = h.exeAsyncHandler(auth, ctx)
-	if !errors.Is(err, HandlerNotFound) {
+	if !errors.Is(err, ErrHandlerNotFound) {
 		return
 	}
 	err = h.exeNotNeedAuthHandler(ctx)

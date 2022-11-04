@@ -30,7 +30,7 @@ func (c *Context) Send(v interface{}) {
 	}
 }
 func (c *Context) SendWithCodeType(v interface{}, codeType CodeType) {
-	err := c.AsyncWrite(Encode(v, c.CodeType, c.Proto))
+	err := c.AsyncWrite(Encode(v, codeType, c.Proto))
 	if err != nil {
 		glog.Logger.Sugar().Errorf("AsyncWrite err:%s", err.Error())
 	}

@@ -77,7 +77,7 @@ func Encode(v interface{}, codeType CodeType, proto uint32) ([]byte, int) {
 	}
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
 	msgLen := bodyOffset + len(raw)
-	buffer := BUFFERPOOL.Get(uint32(msgLen))
+	buffer := *BUFFERPOOL.Get(uint32(msgLen))
 	//data := make([]byte, msgLen)
 	packetEndian.PutUint32(buffer, uint32(len(raw)))
 	packetEndian.PutUint32(buffer[payloadLen:], proto)
@@ -88,7 +88,7 @@ func Encode(v interface{}, codeType CodeType, proto uint32) ([]byte, int) {
 func EncodeBin(bin []byte, codeType CodeType, proto uint32) ([]byte, int) {
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
 	msgLen := bodyOffset + len(bin)
-	buffer := BUFFERPOOL.Get(uint32(msgLen))
+	buffer := *BUFFERPOOL.Get(uint32(msgLen))
 	//data := make([]byte, msgLen)
 	packetEndian.PutUint32(buffer, uint32(len(bin)))
 	packetEndian.PutUint32(buffer[payloadLen:], proto)

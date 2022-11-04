@@ -28,7 +28,7 @@ func TestBufferPool_GetBuffer(t *testing.T) {
 	//l := len(BUFFERPOOL.capSlice)
 	var i uint32
 	for i = 1; i < 100000; i++ {
-		buff := BUFFERPOOL.Get(i)
+		buff := *BUFFERPOOL.Get(i)
 		if math.Log2(float64(len(buff))) != math.Log2(float64(i))+7 {
 			fmt.Println(math.Log2(float64(len(buff))), math.Ceil(math.Log2(float64(i))))
 			t.Fatalf("11 need:%d,get:%d", i, len(buff))

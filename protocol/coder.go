@@ -3,10 +3,10 @@ package protocol
 type CodeType uint16
 
 const (
-	CodeNone = CodeType(0)
-	String   = CodeType(1)
-	Json     = CodeType(2)
-	Bind     = CodeType(3)
+	CodeNone    = CodeType(0)
+	String      = CodeType(1)
+	Json        = CodeType(2)
+	ProtoBuffer = CodeType(3)
 )
 
 type Coder interface {
@@ -20,7 +20,9 @@ func GameCoder(codeType CodeType) Coder {
 	case Json:
 		return &jsonCoder{CoderType: Json}
 	case String:
-		return &rawString{}
+		return &rawString{CodeType: String}
+	case ProtoBuffer:
+		return &protocBufferCoder{CoderType: ProtoBuffer}
 	default:
 		return &rawString{}
 	}

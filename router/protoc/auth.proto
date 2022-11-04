@@ -1,0 +1,7 @@
+syntax = "proto3";
+option go_package = "./";
+// this is a comment
+message AuthRequest {
+  bytes CipherText =1;
+  string Text = 2;
+}
