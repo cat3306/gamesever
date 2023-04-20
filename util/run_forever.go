@@ -35,7 +35,7 @@ func PanicRepeatRun(f func(), args ...PanicRepeatRunArgs) {
 		param = args[0]
 	}
 	if param.Try == 0 {
-		param.Try = math.MaxInt16
+		param.Try = math.MaxInt8
 	}
 	total := param.Try
 	for !runPanicLess(f) && param.Try >= 1 {

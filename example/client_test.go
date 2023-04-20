@@ -48,7 +48,7 @@ func TestGoHeartBeat(t *testing.T) {
 	heartBeat(conn, true)
 }
 func TestHearBeatMore(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50000; i++ {
 		go func() {
 			conn := Conn()
 			if conn == nil {
@@ -162,7 +162,7 @@ func auth(conn net.Conn) {
 		return
 	}
 	req.CipherText = cryptoutil.RsaEncrypt([]byte(req.Text), pubKey)
-	raw, msgLen := protocol.Encode(&req, protocol.ProtoBuffer, util.MethodHash("ClientAuth"))
+	raw, msgLen := protocol.Encode(&req, protocol.Json, util.MethodHash("ClientAuth"))
 	_, err = conn.Write(raw[:msgLen])
 	fmt.Println(err)
 }

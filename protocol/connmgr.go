@@ -1,9 +1,10 @@
 package protocol
 
 import (
+	"sync"
+
 	"github.com/cat3306/gameserver/glog"
 	"github.com/panjf2000/gnet/v2"
-	"sync"
 )
 
 type ConnManager struct {
