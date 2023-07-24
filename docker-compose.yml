@@ -15,12 +15,14 @@ services:
     networks:
       - mysql_mysqlnet
       - redis_redisnet
+      - gamenet
 
 networks:
   mysql_mysqlnet:
     external: true
   redis_redisnet:
     external: true
+  gamenet:
 
 
 
