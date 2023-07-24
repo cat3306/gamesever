@@ -40,6 +40,7 @@ func TestHeartBeat(t *testing.T) {
 	conn := Conn()
 	auth(conn)
 	receive(conn)
+	//select {}
 	heartBeat(conn, false)
 }
 func TestGoHeartBeat(t *testing.T) {
@@ -67,10 +68,10 @@ func heartBeat(conn net.Conn, isGo bool) {
 	if isGo {
 		m = "GoHeartBeat"
 	}
-	raw, msgLen := protocol.Encode("💓", protocol.String, util.MethodHash(m))
+	raw := protocol.Encode("💓", protocol.String, util.MethodHash(m))
 
 	for {
-		_, err := conn.Write(raw[:msgLen])
+		_, err := conn.Write(raw)
 		if err != nil {
 			fmt.Println("write error err ", err)
 			return
@@ -97,8 +98,8 @@ func createRoom(conn net.Conn) {
 		MaxNum:    10,
 		JoinState: true,
 	}
-	raw, msgLen := protocol.Encode(req, protocol.Json, util.MethodHash("CreateRoom"))
-	_, err := conn.Write(raw[:msgLen])
+	raw := protocol.Encode(req, protocol.Json, util.MethodHash("CreateRoom"))
+	_, err := conn.Write(raw)
 	if err != nil {
 		fmt.Println("write error err ", err)
 		return
@@ -120,8 +121,8 @@ func joinRoom(conn net.Conn) {
 		Pwd:    "123456",
 		RoomId: "kInXQNE",
 	}
-	raw, msgLen := protocol.Encode(req, protocol.Json, util.MethodHash("JoinRoom"))
-	_, err := conn.Write(raw[:msgLen])
+	raw := protocol.Encode(req, protocol.Json, util.MethodHash("JoinRoom"))
+	_, err := conn.Write(raw)
 	if err != nil {
 		fmt.Println("write error err ", err)
 		return
@@ -162,8 +163,8 @@ func auth(conn net.Conn) {
 		return
 	}
 	req.CipherText = cryptoutil.RsaEncrypt([]byte(req.Text), pubKey)
-	raw, msgLen := protocol.Encode(&req, protocol.Json, util.MethodHash("ClientAuth"))
-	_, err = conn.Write(raw[:msgLen])
+	raw := protocol.Encode(&req, protocol.Json, util.MethodHash("ClientAuth"))
+	_, err = conn.Write(raw)
 	fmt.Println(err)
 }
 
@@ -179,8 +180,8 @@ func protoBuffer(conn net.Conn) {
 		Y: 3.1,
 		Z: 2.1,
 	}
-	raw, msgLen := protocol.Encode(req, protocol.ProtoBuffer, util.MethodHash("TestProtoBuffer"))
-	_, err := conn.Write(raw[:msgLen])
+	raw := protocol.Encode(req, protocol.ProtoBuffer, util.MethodHash("TestProtoBuffer"))
+	_, err := conn.Write(raw)
 	if err != nil {
 		fmt.Println("write error err ", err)
 		return

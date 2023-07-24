@@ -15,6 +15,6 @@ type Room struct {
 }
 
 func (r *Room) Broadcast(v interface{}, ctx *protocol.Context) {
-	raw, msgLen := protocol.Encode(v, ctx.CodeType, ctx.Proto)
-	r.connMgr.Broadcast(raw[:msgLen])
+	raw := protocol.Encode(v, ctx.CodeType, ctx.Proto)
+	r.connMgr.Broadcast(raw)
 }

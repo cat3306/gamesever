@@ -1,34 +1,27 @@
 services:
-  MYSQLDB:
-    image: mysql
-    volumes:
-      - db_data:/var/lib/mysql
-    restart: always
-    container_name: MYSQLDB
-    command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=+08:00' ]
-    ports:
-      - 3309:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=12345678
-      - TZ=Asia/Shanghai
   gameserver:
     image: cat19/gameserver
     ports:
       - 8840:8840
     restart: always
-    container_name: GameServer
+    container_name: gameserver
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
-    links:
-      - MYSQLDB:MysqlDb
-      - GameCache:GameCache
-  GameCache:
-    image: redis:latest
-    #ports:
-    restart: always
-    container_name: GameCache
-    command: redis-server --save 60 1 --loglevel warning
-volumes:
-  db_data:
+    external_links:
+      - mysql:MysqlDb
+      - redis:GameCache
+    networks:
+      - mysql_mysqlnet
+      - redis_redisnet
+
+networks:
+  mysql_mysqlnet:
+    external: true
+  redis_redisnet:
+    external: true
+
+
+
+

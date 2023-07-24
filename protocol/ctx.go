@@ -21,6 +21,11 @@ type Context struct {
 }
 
 func (c *Context) Bind(v interface{}) error {
+
+	return GameCoder(c.CodeType).Unmarshal(c.Payload, v)
+}
+func (c *Context) Bind2(v interface{}) error {
+
 	return GameCoder(c.CodeType).Unmarshal(c.Payload, v)
 }
 func (c *Context) Send(v interface{}) {
@@ -42,8 +47,8 @@ func (c *Context) SendWithParams(v interface{}, codeType CodeType, method string
 	}
 }
 
-func (c *Context) AsyncWrite(raw []byte, msgLen int) error {
-	return c.Conn.AsyncWrite(raw[:msgLen], func(c gnet.Conn) error {
+func (c *Context) AsyncWrite(raw []byte) error {
+	return c.Conn.AsyncWrite(raw, func(c gnet.Conn) error {
 		BUFFERPOOL.Put(raw)
 		return nil
 	})
@@ -53,8 +58,8 @@ func (c *Context) SetConnMgr(connMgr *ConnManager) {
 }
 func (c *Context) GlobalBroadcast(v interface{}, ) {
 	if c.connMgr != nil {
-		raw, msgLen := Encode(v, c.CodeType, c.Proto)
-		c.connMgr.Broadcast(raw[:msgLen])
+		raw:= Encode(v, c.CodeType, c.Proto)
+		c.connMgr.Broadcast(raw)
 	}
 }
 func (c *Context) SetUserId(uid string) {

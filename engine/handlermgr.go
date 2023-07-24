@@ -115,8 +115,8 @@ func (h *HandlerManager) checkConnAuth(c gnet.Conn) bool {
 	ok := c.GetProperty(protocol.Auth)
 	if ok == "" {
 		ip := c.RemoteAddr()
-		f := func(raw []byte, msgLen int) error {
-			return c.AsyncWrite(raw[:msgLen], func(c gnet.Conn) error {
+		f := func(raw []byte) error {
+			return c.AsyncWrite(raw, func(c gnet.Conn) error {
 				protocol.BUFFERPOOL.Put(raw)
 				_ = c.Close()
 				return nil
@@ -153,6 +153,10 @@ func (h *HandlerManager) exeAsyncHandler(auth bool, ctx *protocol.Context) error
 				return ErrHandlerAuthFailed
 			}
 		}
+
+		newBuffer := protocol.BUFFERPOOL.Get(uint32(len(ctx.Payload)))
+		copy(*newBuffer, ctx.Payload)
+		ctx.Payload = *newBuffer
 		err := h.gPool.Submit(func() {
 			f(ctx, struct{}{})
 		})

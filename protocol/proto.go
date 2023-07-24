@@ -35,7 +35,7 @@ var (
 func Decode(c gnet.Conn) (*Context, error) {
 
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)
-	buf, err := c.Peek(bodyOffset)
+	buf, err := c.Next(bodyOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -51,23 +51,19 @@ func Decode(c gnet.Conn) (*Context, error) {
 	if c.InboundBuffered() < msgLen {
 		return nil, ErrIncompletePacket
 	}
-	buf, err = c.Peek(msgLen)
-	if err != nil {
-		return nil, err
-	}
-	_, err = c.Discard(msgLen)
+	buf, err = c.Next(int(bodyLen))
 	if err != nil {
 		return nil, err
 	}
 	packet := &Context{
-		Payload:  buf[bodyOffset:msgLen],
+		Payload:  buf,
 		CodeType: CodeType(codeType),
 		Proto:    protocol,
 		Conn:     c,
 	}
 	return packet, nil
 }
-func Encode(v interface{}, codeType CodeType, proto uint32) ([]byte, int) {
+func Encode(v interface{}, codeType CodeType, proto uint32) []byte {
 	if v == nil {
 		panic("v nil")
 	}
@@ -83,7 +79,7 @@ func Encode(v interface{}, codeType CodeType, proto uint32) ([]byte, int) {
 	packetEndian.PutUint32(buffer[payloadLen:], proto)
 	packetEndian.PutUint16(buffer[payloadLen+protocolLen:], uint16(codeType))
 	copy(buffer[bodyOffset:msgLen], raw)
-	return buffer, msgLen
+	return buffer[:msgLen]
 }
 func EncodeBin(bin []byte, codeType CodeType, proto uint32) ([]byte, int) {
 	bodyOffset := int(payloadLen + protocolLen + codeTypeLen)

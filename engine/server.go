@@ -37,7 +37,7 @@ func (s *Server) OnTraffic(c gnet.Conn) gnet.Action {
 	//		glog.Logger.Sugar().Errorf("OnTraffic panic %v", err)
 	//	}
 	//}()
-	s.eng.CountConnections()
+	//s.eng.CountConnections()
 	context, err := protocol.Decode(c)
 	if err != nil {
 		glog.Logger.Sugar().Warnf("OnTraffic err:%s", err.Error())
@@ -72,7 +72,7 @@ func (s *Server) OnOpen(c gnet.Conn) (out []byte, action gnet.Action) {
 	c.SetId(cId)
 	s.connMgr.Add(c)
 	glog.Logger.Sugar().Infof("cid:%s connect", c.ID())
-	return nil, gnet.None
+	return out, gnet.None
 }
 func (s *Server) OnShutdown(e gnet.Engine) {
 
@@ -84,6 +84,7 @@ func (s *Server) Run() {
 			gnet.WithMulticore(true),
 			gnet.WithSocketSendBuffer(conf.GameConfig.ConnWriteBuffer),
 			gnet.WithSocketRecvBuffer(conf.GameConfig.ConnWriteBuffer),
+			//gnet.WithTCPKeepAlive()
 		)
 		panic(err)
 	}

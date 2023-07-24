@@ -14,7 +14,6 @@ require (
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -32,4 +31,4 @@ require (
 	google.golang.org/protobuf v1.28.1
 )
 
-replace github.com/panjf2000/gnet/v2 => github.com/cat3306/gnet/v2 v2.1.3
+replace github.com/panjf2000/gnet/v2 => github.com/cat3306/gnet/v2 v2.1.4-0.20230421080729-7e6031680b86

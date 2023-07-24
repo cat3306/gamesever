@@ -2,7 +2,6 @@ package util
 
 import (
 	"github.com/cat3306/gameserver/glog"
-	"math"
 	"reflect"
 	"runtime"
 	"time"
@@ -29,13 +28,13 @@ func runPanicLess(f func()) (panicLess bool) {
 func PanicRepeatRun(f func(), args ...PanicRepeatRunArgs) {
 	param := PanicRepeatRunArgs{
 		Sleep: 0,
-		Try:   math.MaxInt16,
+		Try:   3,
 	}
 	if len(args) != 0 {
 		param = args[0]
 	}
 	if param.Try == 0 {
-		param.Try = math.MaxInt8
+		param.Try = 8
 	}
 	total := param.Try
 	for !runPanicLess(f) && param.Try >= 1 {
