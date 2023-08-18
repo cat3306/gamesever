@@ -3,6 +3,7 @@ package protocol
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/panjf2000/gnet/v2"
@@ -48,6 +49,7 @@ func Decode(c gnet.Conn) (*Context, error) {
 		c.Close()
 		return nil, ErrTooLargePacket
 	}
+	fmt.Println(c.InboundBuffered())
 	if c.InboundBuffered() < msgLen {
 		return nil, ErrIncompletePacket
 	}

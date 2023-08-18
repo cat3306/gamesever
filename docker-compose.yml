@@ -9,9 +9,6 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    external_links:
-      - mysql:MysqlDb
-      - redis:GameCache
     networks:
       - mysql_mysqlnet
       - redis_redisnet
